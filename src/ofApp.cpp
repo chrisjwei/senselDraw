@@ -32,8 +32,17 @@ void ofApp::updateMesh(ofMesh *mesh){
       int y = ofMap(row, 0, meshH, 0, ofGetHeight());
       ofColor currColor = pixels.getColor(x,y);
       if (currColor.getBrightness() > 200) rescale = true;
-      currPos.z = fboScale * 4 * currColor.getBrightness();
+      int z = currPos.z;
+      int newz = fboScale * 4 * currColor.getBrightness();
+      currPos.z = newz;
       mesh->setVertex(i, currPos);
+      if (newz - z > 0){
+        mesh->setColor(i, ofColor::blue);
+      } else if (newz - z < 0) {
+        mesh->setColor(i, ofColor::red);
+      } else {
+        mesh->setColor(i, ofColor::grey);
+      }
     }
   }
   if (rescale){
@@ -43,14 +52,15 @@ void ofApp::updateMesh(ofMesh *mesh){
 
 void ofApp::drawUi(){
   ofDrawBitmapStringHighlight("SenselDraw",32, 32);
-  ofDrawBitmapStringHighlight(">> (c)lear buffer | (t)oggle views | rotate (m)odes", 32, 64);
+  ofDrawBitmapStringHighlight(">> (c)lear | (v)iews | (m)odes", 32, 64);
   ofDrawBitmapStringHighlight(">> current mode:", 32, 96);
+  int offset = 145;
   if (mode == 0){
-    ofDrawBitmapStringHighlight("[+]", 180, 96);  
+    ofDrawBitmapStringHighlight("[+]", 32 + offset, 96);  
   } else if (mode == 1){
-    ofDrawBitmapStringHighlight("[-]", 180, 96);  
+    ofDrawBitmapStringHighlight("[-]", 32 + offset, 96);  
   } else {
-    ofDrawBitmapStringHighlight("[?]", 180, 96);  
+    ofDrawBitmapStringHighlight("[?]", 32 + offset, 96);  
   }
   
 }
@@ -171,7 +181,7 @@ void ofApp::keyPressed(int key){
     fbo.end();
     updateMesh(&mesh);
   }
-  if (key == 't'){
+  if (key == 'v'){
     toggleFboDraw = !toggleFboDraw;
   } 
   if (key == 'm'){
