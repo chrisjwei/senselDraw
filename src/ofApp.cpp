@@ -27,9 +27,9 @@ void ofApp::updateMesh(ofMesh *mesh){
       int i = col + row * meshW;
       ofVec3f currPos = mesh->getVertex(i);
 
-      int x = ofMap(col, 0, meshW, 0, ofGetWidth());
+      int x = ofMap(col, 0, meshW, 0, ofGetWidth(), true);
       x = ofGetWidth() - x;
-      int y = ofMap(row, 0, meshH, 0, ofGetHeight());
+      int y = ofMap(row, 0, meshH, 0, ofGetHeight(), true);
       ofColor currColor = pixels.getColor(x,y);
       if (currColor.getBrightness() > 200) rescale = true;
       int z = currPos.z;
@@ -78,17 +78,19 @@ void ofApp::setup(){
 
   /* setup some variables */
   fboScale = 1;          /* our fbo's scale */
-  toggleFboDraw = false; /* used to draw fbo instead of mesh */
   drawingActive = true;  /* used to deactivate drawing */
   hideMenu = false;      /* used to show or hide menu */
   mode = 0;              /* 0 = adding, 1 = subtracting */
   maxModes = 2;
+  viewMode = 0;
+  maxViewModes = 2;
 
   /* setup camera */
   cam.setPosition(ofVec3f(0, 0, 0));
   cam.setTarget(ofVec3f(0,0,0));
   cam.setDistance(2000);
   cam.roll(180.f);
+  
 
   /* setup our mesh */
   meshSize = 30;
@@ -162,8 +164,7 @@ void ofApp::update(){
 
 //--------------------------------------------------------------
 void ofApp::draw(){
-  if (toggleFboDraw) fbo.draw(0,0);
-  else {
+  if (viewMode == 0){
     cam.begin();
     ofPushMatrix();
       ofTranslate(-ofGetWidth()/2, -ofGetHeight()/2);
@@ -171,6 +172,9 @@ void ofApp::draw(){
       mesh.drawWireframe();
     ofPopMatrix();
     cam.end();
+  } else if (viewMode == 1){
+    ofSetColor(ofColor::white);
+    fbo.draw(0,0);
   }
   if (!hideMenu) drawUi();
 }
@@ -188,7 +192,7 @@ void ofApp::keyPressed(int key){
     updateMesh(&mesh);
   }
   if (key == 'v'){
-    toggleFboDraw = !toggleFboDraw;
+    viewMode = (viewMode + 1) % maxViewModes;
   } 
   if (key == 'm'){
     mode = (mode + 1) % maxModes;

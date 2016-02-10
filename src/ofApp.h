@@ -38,6 +38,8 @@ class ofApp : public ofBaseApp{
     ofVec2f cursor[MAX_CONTACTS];
     int mode;
     int maxModes;
+    int viewMode;
+    int maxViewModes;
 
     int meshW, meshH, meshSize;
 
@@ -47,6 +49,4 @@ class ofApp : public ofBaseApp{
     ofFbo fbo;
     int fboScale;
     ofxBlur blur;
-
-    bool toggleFboDraw;
 };
