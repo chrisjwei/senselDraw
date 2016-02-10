@@ -36,10 +36,15 @@ void ofApp::updateMesh(ofMesh *mesh){
       int newz = fboScale * 4 * currColor.getBrightness();
       currPos.z = newz;
       mesh->setVertex(i, currPos);
-      if (newz - z > 0){
-        mesh->setColor(i, ofColor::blue);
-      } else if (newz - z < 0) {
-        mesh->setColor(i, ofColor::red);
+
+      int dz = newz-z;
+      float amt;
+      if (dz > 0){
+        amt = ofMap(dz,0, fboScale * 32, 0, 1, true);
+        mesh->setColor(i, ofColor::grey.getLerped(ofColor::blue, amt));
+      } else if (dz < 0) {
+        amt = ofMap(-dz,0, fboScale * 32, 0, 1, true);
+        mesh->setColor(i, ofColor::grey.getLerped(ofColor::red, amt));
       } else {
         mesh->setColor(i, ofColor::grey);
       }
@@ -51,16 +56,16 @@ void ofApp::updateMesh(ofMesh *mesh){
 }
 
 void ofApp::drawUi(){
-  ofDrawBitmapStringHighlight("SenselDraw",32, 32);
-  ofDrawBitmapStringHighlight(">> (c)lear | (v)iews | (m)odes", 32, 64);
-  ofDrawBitmapStringHighlight(">> current mode:", 32, 96);
+  ofDrawBitmapStringHighlight("SenselDraw",32, 30);
+  ofDrawBitmapStringHighlight(">> (c)lear | (v)iews | (m)odes | (h)ide", 32, 55);
+  ofDrawBitmapStringHighlight(">> current mode:", 32, 80);
   int offset = 145;
   if (mode == 0){
-    ofDrawBitmapStringHighlight("[+]", 32 + offset, 96);  
+    ofDrawBitmapStringHighlight("[+]", 32 + offset, 80);  
   } else if (mode == 1){
-    ofDrawBitmapStringHighlight("[-]", 32 + offset, 96);  
+    ofDrawBitmapStringHighlight("[-]", 32 + offset, 80);  
   } else {
-    ofDrawBitmapStringHighlight("[?]", 32 + offset, 96);  
+    ofDrawBitmapStringHighlight("[?]", 32 + offset, 80);  
   }
   
 }
@@ -75,6 +80,7 @@ void ofApp::setup(){
   fboScale = 1;          /* our fbo's scale */
   toggleFboDraw = false; /* used to draw fbo instead of mesh */
   drawingActive = true;  /* used to deactivate drawing */
+  hideMenu = false;      /* used to show or hide menu */
   mode = 0;              /* 0 = adding, 1 = subtracting */
   maxModes = 2;
 
@@ -161,12 +167,12 @@ void ofApp::draw(){
     cam.begin();
     ofPushMatrix();
       ofTranslate(-ofGetWidth()/2, -ofGetHeight()/2);
-      for (int i =0; i < MAX_CONTACTS; i++ ){ellipse[i].drawCursor();} 
+      for (int i =0; i < MAX_CONTACTS; i++ ){ellipse[i].drawCursor(mode);} 
       mesh.drawWireframe();
     ofPopMatrix();
     cam.end();
   }
-  drawUi();
+  if (!hideMenu) drawUi();
 }
 
 void ofApp::exit(){
@@ -186,6 +192,9 @@ void ofApp::keyPressed(int key){
   } 
   if (key == 'm'){
     mode = (mode + 1) % maxModes;
+  }
+  if (key == 'h'){
+    hideMenu = !hideMenu;
   }
 }
 

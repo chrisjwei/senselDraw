@@ -34,12 +34,21 @@ void Ellipse::draw(){
   }
 }
 
-void Ellipse::drawCursor(){
+void Ellipse::drawCursor(int mode){
   if (active){
+    ofColor topColor;
+
     ofPushMatrix();
     ofTranslate(ofGetWidth()-x, y);
     ofRotateZ(-rotation);
-    ofSetColor(ofColor::blue.getLerped(ofColor::red, f*1.2));
+    if (mode == 0){
+      topColor = ofColor::blue;
+    } else if (mode == 1) {
+      topColor = ofColor::red;
+    } else {
+      topColor = ofColor::black; 
+    }
+    ofSetColor(ofColor::grey.getLerped(topColor, 0.3 + f));
     ofDrawEllipse(0,0,width,height);
     ofPopMatrix();
   }

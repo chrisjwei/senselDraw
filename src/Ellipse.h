@@ -6,7 +6,7 @@ public:
   void deactivate();
   void set(int, int, int, int, int, float, ofColor);
   void draw();
-  void drawCursor();
+  void drawCursor(int);
 
   bool active;
   float x, y, width, height, rotation, f;

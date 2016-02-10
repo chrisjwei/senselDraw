@@ -26,7 +26,7 @@ class ofApp : public ofBaseApp{
 
     double kernel[MAX_KERN_SIZE][MAX_KERN_SIZE];
 
-    bool drawingActive;
+    bool drawingActive, hideMenu;
     int clearing;
     
     ofEasyCam cam;
