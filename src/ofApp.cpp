@@ -43,14 +43,14 @@ void ofApp::updateMesh(ofMesh *mesh){
 
 void ofApp::drawUi(){
   ofDrawBitmapStringHighlight("SenselDraw",32, 32);
-  ofDrawBitmapStringHighlight("(c)lear buffer | (t)oggle views | rotate (m)odes", 32, 64);
-  ofDrawBitmapStringHighlight("current mode:", 32, 96);
+  ofDrawBitmapStringHighlight(">> (c)lear buffer | (t)oggle views | rotate (m)odes", 32, 64);
+  ofDrawBitmapStringHighlight(">> current mode:", 32, 96);
   if (mode == 0){
-    ofDrawBitmapStringHighlight("[+]", 150, 96);  
+    ofDrawBitmapStringHighlight("[+]", 180, 96);  
   } else if (mode == 1){
-    ofDrawBitmapStringHighlight("[-]", 150, 96);  
+    ofDrawBitmapStringHighlight("[-]", 180, 96);  
   } else {
-    ofDrawBitmapStringHighlight("[?]", 150, 96);  
+    ofDrawBitmapStringHighlight("[?]", 180, 96);  
   }
   
 }
