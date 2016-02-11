@@ -1,18 +1,5 @@
 #include "ofApp.h"
 
-/** rescaleFbo used to rescale our max height that is represented by the color
- *  white. A 50% opacity black rectangle is draw into our fbo, which halfs
- *  the brightness of all pixels in the fbo. We then double the fboScale to
- *  account for the halfing in height and decrease the opacity of future
- *  ellipses draw into the buffer */
-void ofApp::rescaleFbo(){
-  fbo.begin();
-    ofSetColor(0,0,0,128);
-    ofDrawRectangle(0,0,ofGetWidth(), ofGetHeight());
-  fbo.end();
-  fboScale *= 2;
-}
-
 /** goes through each vertex in the mesh and samples the fbo based on each
  *  vertex's position. Based on the brightness of the pixel sampled, the
  *  new z value is set accordingly. If a pixel brightness is beyond some
@@ -20,8 +7,7 @@ void ofApp::rescaleFbo(){
  */
 void ofApp::updateMesh(ofMesh *mesh){
   ofPixels pixels;
-  fbo.readToPixels(pixels);
-  bool rescale = false;
+  fbo[fboIndex].readToPixels(pixels);
   for (int row=0; row<meshH; row++) {
     for (int col=0; col<meshW; col++) {
       int i = col + row * meshW;
@@ -31,9 +17,9 @@ void ofApp::updateMesh(ofMesh *mesh){
       x = ofGetWidth() - x;
       int y = ofMap(row, 0, meshH, 0, ofGetHeight(), true);
       ofColor currColor = pixels.getColor(x,y);
-      if (currColor.getBrightness() > 200) rescale = true;
-      int z = currPos.z;
-      int newz = fboScale * 4 * currColor.getBrightness();
+      //if (currColor.getBrightness() > 200) rescale = true;
+      float z = currPos.z;
+      float newz = 8 * currColor.getLightness();
       currPos.z = newz;
       mesh->setVertex(i, currPos);
 
@@ -49,9 +35,6 @@ void ofApp::updateMesh(ofMesh *mesh){
         mesh->setColor(i, ofColor::grey);
       }
     }
-  }
-  if (rescale){
-    rescaleFbo();
   }
 }
 
@@ -73,7 +56,7 @@ void ofApp::drawUi(){
 //--------------------------------------------------------------
 void ofApp::setup(){
   ofEnableAlphaBlending();
-
+  ofSetSmoothLighting(true);
   sensel.setup();
 
   /* setup some variables */
@@ -83,25 +66,33 @@ void ofApp::setup(){
   mode = 0;              /* 0 = adding, 1 = subtracting */
   maxModes = 2;
   viewMode = 0;
-  maxViewModes = 2;
+  maxViewModes = 3;
 
   /* setup camera */
   cam.setPosition(ofVec3f(0, 0, 0));
   cam.setTarget(ofVec3f(0,0,0));
   cam.setDistance(2000);
   cam.roll(180.f);
-  
+
+  //light.setPointLight();
+  //light.setPosition(ofVec3f(0,-1000,0));
+  light.setPointLight();
+  light.setPosition(ofVec3f(0,0,0));
+  //light.setOrientation(ofVec3f(0, 90, 0));
+  //light.setAmbientColor(ofColor::white);
+  //light.setDiffuseColor(ofColor::red);
+  //light.setSpecularColor(ofColor::blue);
 
   /* setup our mesh */
-  meshSize = 30;
+  meshSize = 15;
   meshH = (ofGetHeight()/meshSize)+1;
   meshW = (ofGetWidth()/meshSize)+1;
   
   /* place vertexes into our mesh */  
   for (int row=0; row<meshH; row++) {
     for (int col=0; col<meshW; col++) { 
-      mesh.addVertex(ofVec3f((col) * meshSize, (row) * meshSize, 0));
-      //mesh.addTexCoord(ofPoint(x * (ofGetWidth() / meshW), y * (ofGetHeight() / meshH)));
+      mesh.addVertex(ofVec3f(col * meshSize, row * meshSize, 0));
+      //mesh.addTexCoord(ofPoint(col * meshSize, row * meshSize));
       mesh.addColor(ofColor::grey);
     }
   }
@@ -117,11 +108,14 @@ void ofApp::setup(){
     }
   }
     
-  /* setup frame buffer */
-  fbo.allocate(ofGetWidth(), ofGetHeight(), GL_RGB);
-  fbo.begin();
-    ofClear(0,0,0,1);
-  fbo.end();
+  /* setup frame buffers */
+  fboIndex = 0;
+  for (int i = 0; i < NUM_FRAMES; i++){
+    fbo[i].allocate(ofGetWidth(), ofGetHeight(), GL_RGB);
+    fbo[i].begin();
+      ofClear(0,0,0,1);
+    fbo[i].end();
+  }
 }
 
 //--------------------------------------------------------------
@@ -142,10 +136,13 @@ void ofApp::update(){
     int r = sensel.getContacts()[i].orientation;
 
     ofColor color;
+
+    float opacity = ofMap(0.5 + atan(10*f-9)/(3.1415926535),0.0,.9,0.0,256.0,true);
+
     if (mode == 0){
-      color = ofColor(255, 255, 255, 64*f/fboScale);  
+      color = ofColor(255, 255, 255, opacity);  
     } else if (mode == 1){
-      color = ofColor(0, 0, 0, 64*f/fboScale);  
+      color = ofColor(0, 0, 0, opacity);  
     } else {
       return;
     }
@@ -154,12 +151,13 @@ void ofApp::update(){
   }
   /* update our fbo */
   if (drawingActive){
-    fbo.begin();
+    fbo[fboIndex].begin();
       for (int i =0; i < MAX_CONTACTS; i++ ){ellipse[i].draw();}
-    fbo.end();
+    fbo[fboIndex].end();
   }
   /* update mesh */
   updateMesh(&mesh);
+  fboIndex = (fboIndex + 1) % NUM_FRAMES;
 }
 
 //--------------------------------------------------------------
@@ -173,8 +171,21 @@ void ofApp::draw(){
     ofPopMatrix();
     cam.end();
   } else if (viewMode == 1){
+    ofEnableLighting();
+    cam.begin();
+    light.enable();
+    ofPushMatrix();
+      ofTranslate(-ofGetWidth()/2, -ofGetHeight()/2);
+      mesh.draw();  
+    ofPopMatrix();
+    light.disable();
+    cam.end();
+
+    ofDisableLighting();
+  }
+  if (viewMode == 2){
     ofSetColor(ofColor::white);
-    fbo.draw(0,0);
+    fbo[fboIndex].draw(0,0);
   }
   if (!hideMenu) drawUi();
 }
@@ -186,9 +197,11 @@ void ofApp::exit(){
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
   if (key == 'c'){
-    fbo.begin();
-    ofClear(0,0,0,1);
-    fbo.end();
+    for (int i = 0; i < NUM_FRAMES; i++){
+      fbo[i].begin();
+      ofClear(0,0,0,1);
+      fbo[i].end();
+    }
     updateMesh(&mesh);
   }
   if (key == 'v'){

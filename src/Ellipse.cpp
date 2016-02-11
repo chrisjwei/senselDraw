@@ -48,7 +48,7 @@ void Ellipse::drawCursor(int mode){
     } else {
       topColor = ofColor::black; 
     }
-    ofSetColor(ofColor::grey.getLerped(topColor, 0.3 + f));
+    ofSetColor(ofColor::grey.getLerped(topColor, ofMap(f, 0, 1.0, 0.3, 1.0,  true)));
     ofDrawEllipse(0,0,width,height);
     ofPopMatrix();
   }

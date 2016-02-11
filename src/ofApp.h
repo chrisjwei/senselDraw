@@ -5,8 +5,8 @@
 #include "ofxBlur.h"
 #include "Ellipse.h"
 #include <stdlib.h>
-
-#define MAX_KERN_SIZE 100
+/* best not to exceed 30ish frames */
+#define NUM_FRAMES 30
 
 class ofApp : public ofBaseApp{
 
@@ -20,17 +20,14 @@ class ofApp : public ofBaseApp{
     
         void exit();
         void updateMesh(ofMesh *);
-        void rescaleFbo();
         void drawUi();
-
-
-    double kernel[MAX_KERN_SIZE][MAX_KERN_SIZE];
 
     bool drawingActive, hideMenu;
     int clearing;
     
     ofEasyCam cam;
     ofxSenselMorph sensel;
+    ofLight light;
 
 
     Ellipse ellipse[MAX_CONTACTS];
@@ -46,7 +43,7 @@ class ofApp : public ofBaseApp{
     ofMesh mesh;
     int selected;
 
-    ofFbo fbo;
+    ofFbo fbo[NUM_FRAMES];
+    int fboIndex;
     int fboScale;
-    ofxBlur blur;
 };
